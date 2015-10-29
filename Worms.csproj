@@ -46,6 +46,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AssemblyInfo.g.tt</DependentUpon>
     </Compile>
+    <Compile Include="AutoResetEvent.cs" />
     <Compile Include="Cleaner.cs" />
     <Compile Include="FaultedTask.cs" />
     <Compile Include="Mannex.cs" />
