@@ -27,10 +27,8 @@ namespace Worms
 
     #endregion
 
-    // ReSharper disable once PartialTypeWithSinglePart
-
     [DebuggerDisplay("IsSet = {IsSet}, WaitCount = {WaitCount}")]
-    partial class AutoResetEvent
+    public class AutoResetEvent
     {
         sealed class State
         {
