@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package >
+    <metadata>
+        <id>Worms</id>
+        <version>1.0.0</version>
+        <title>Worms: Awaitable Synchronization Primitives</title>
+        <authors>Atif Aziz</authors>
+        <owners>Atif Aziz</owners>
+        <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+        <projectUrl>https://github.com/atifaziz/Worms</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>.NET Portable Class Library that provides awaitable synchronization primitives for use with code employing the Task abstraction for modeling asynchronous operations.</description>
+        <copyright>Copyright &#169; 2015 Atif Aziz. All rights reserved. Portions Copyright &#169; Microsoft.</copyright>
+        <tags>TPL threading synchronization await async</tags>
+    </metadata>
+    <files>
+        <file src="COPYING.txt" target="COPYING.txt" />
+        <file src="bin\Release\*" target="lib\portable-net45+win+wpa81+wp80+MonoAndroid10+xamarinios10+MonoTouch10" />
+        <file src="**.cs" target="src" exclude="*Tests.cs;packages\**;obj\**" />
+    </files>
+</package>
