@@ -82,49 +82,41 @@ namespace Worms
             {
                 if (state.Count > 0)
                 {
-                    return Tuple.Create(state.DecrementCount(), new
-                    {
-                        Wait  = (Wait) null,
-                        Task  = Task.FromResult(true),
-                    });
+                    return Tuple.Create(state.DecrementCount(), (Wait)null);
                 }   // ReSharper disable once RedundantIfElseBlock
                 else
                 {
                     var tcs = new TaskCompletionSource<bool>();
                     var wait = new Wait(tcs, isTimeoutFinitie && timeout != TimeSpan.Zero);
-                    return Tuple.Create(state.WithWaits(state.Waits.Concat(new[] { wait }).ToArray()), new
-                    {
-                        Wait = wait,
-                        tcs.Task,
-                    });
+                    return Tuple.Create(state.WithWaits(state.Waits.Concat(new[] { wait }).ToArray()), wait);
                 }
             });
 
             {
-                var wait = result.Wait;
-                if (wait != null)
-                {
-                    if (isTimeoutFinitie)
-                    {
-                        if (timeout == TimeSpan.Zero)
-                        {
-                            if (wait.TryConclude(Wait.Conclusion.TimedOut))
-                                TryRemoveWait(wait);
-                        }
+                var wait = result;
+                if (wait == null)
+                    return Task.FromResult(true);
 
-                        WaitTimeout(wait, timeout,
-                                    cancellationToken.CanBeCanceled
-                                    ? CancellationTokenSource.CreateLinkedTokenSource(wait.TimeoutCancellationToken, cancellationToken).Token
-                                    : wait.TimeoutCancellationToken)
-                            .IgnoreFault();
+                if (isTimeoutFinitie)
+                {
+                    if (timeout == TimeSpan.Zero)
+                    {
+                        if (wait.TryConclude(Wait.Conclusion.TimedOut))
+                            TryRemoveWait(wait);
                     }
 
-                    if (cancellationToken.CanBeCanceled)
-                        wait.OnCancellation(cancellationToken, TryRemoveWait);
+                    WaitTimeout(wait, timeout,
+                                cancellationToken.CanBeCanceled
+                                ? CancellationTokenSource.CreateLinkedTokenSource(wait.TimeoutCancellationToken, cancellationToken).Token
+                                : wait.TimeoutCancellationToken)
+                        .IgnoreFault();
                 }
-            }
 
-            return result.Task;
+                if (cancellationToken.CanBeCanceled)
+                    wait.OnCancellation(cancellationToken, TryRemoveWait);
+
+                return result.Task;
+            }
         }
 
         async Task WaitTimeout(Wait wait, TimeSpan timeout, CancellationToken cancellationToken)
