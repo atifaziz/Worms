@@ -31,10 +31,8 @@ namespace Worms
 
     #endregion
 
-    // ReSharper disable once PartialTypeWithSinglePart
-
     [DebuggerDisplay("Count = {FreeCount}, WaitCount = {WaitCount}")]
-    partial class Semaphore : IDisposable
+    public class Semaphore : IDisposable
     {
         sealed class State
         {
