@@ -54,7 +54,7 @@ namespace Worms
             });
         }
 
-        public Task Task => _taskCompletionSource.Task;
+        public Task<bool> Task => _taskCompletionSource.Task;
 
         public CancellationToken TimeoutCancellationToken =>
             _timeoutCancellation?.Token ?? CancellationToken.None;
