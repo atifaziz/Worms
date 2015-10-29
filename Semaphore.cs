@@ -25,7 +25,9 @@ namespace Worms
     using System.Threading.Tasks;
     using AngryArrays;
     using AngryArrays.Splice;
+    using Interlocker;
     using Mannex;
+    using Interlocked = Interlocker.Interlocked;
 
     #endregion
 
@@ -52,38 +54,18 @@ namespace Worms
             public State WithWaits(Wait[] waits) => Adjust(0, waits);
         }
 
-        State _state;
+        readonly Interlocked<State> _state;
 
         public Semaphore() : this(0) {}
 
         public Semaphore(int initialCount)
         {
             if (initialCount < 0) throw new ArgumentOutOfRangeException(nameof(initialCount));
-            _state = new State(initialCount);
+            _state = Interlocked.Create(new State(initialCount));
         }
 
-        public int FreeCount => _state.Count;
-        public int WaitCount => _state.Waits.Length;
-
-        void Update(Func<State, State> selector) =>
-            Update(selector, s => s, _ => 0);
-
-        T Update<T>(Func<State, Tuple<State, T>> selector) =>
-            Update(selector, t => t.Item1, t => t.Item2);
-
-        TResult Update<T, TResult>(Func<State, T> selector, Func<T, State> newStateSelector, Func<T, TResult> resultSelector)
-        {
-            T update;
-            for (var sw = new SpinWait(); ; sw.SpinOnce())
-            {
-                var state = _state;
-                update = selector(state);
-                var newState = newStateSelector(update);
-                if (newState == null || state == Interlocked.CompareExchange(ref _state, newState, state))
-                    break;
-            }
-            return resultSelector(update);
-        }
+        public int FreeCount => _state.Value.Count;
+        public int WaitCount => _state.Value.Waits.Length;
 
         public Task WaitAsync() =>
             WaitAsync(Timeout.InfiniteTimeSpan, CancellationToken.None);
@@ -99,7 +81,7 @@ namespace Worms
             if (timeout.Ticks < 0 && isTimeoutFinitie)
                 throw new ArgumentOutOfRangeException(nameof(timeout), timeout, null);
 
-            var result = Update(state =>
+            var result = _state.Update(state =>
             {
                 if (state.Count > 0)
                 {
@@ -162,7 +144,7 @@ namespace Worms
         }
 
         void TryRemoveWait(Wait wait) =>
-            Update(state =>
+            _state.Update(state =>
             {
                 var index = Array.IndexOf(state.Waits, wait);
                 if (index < 0)
@@ -179,7 +161,7 @@ namespace Worms
             if (count == 0)
                 return;
 
-            var waits = Update(state =>
+            var waits = _state.Update(state =>
             {
                 var leftover = Math.Max(count - state.Waits.Length, 0);
                 var parts = state.Waits.Partition(count, (head, tail) => new
@@ -198,7 +180,7 @@ namespace Worms
         public int Block() => Withdraw(int.MaxValue);
 
         public int Withdraw(int count) =>
-            Update(state =>
+            _state.Update(state =>
             {
                 var adjusted = Math.Min(count, state.Count);
                 return Tuple.Create(state = state.DecrementCount(adjusted),
