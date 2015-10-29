@@ -24,7 +24,6 @@ namespace Worms
     using System.Threading;
     using System.Threading.Tasks;
     using AngryArrays;
-    using AngryArrays.Splice;
     using Interlocker;
     using Mannex;
     using Interlocked = Interlocker.Interlocked;
@@ -109,7 +108,7 @@ namespace Worms
                     {
                         if (timeout == TimeSpan.Zero)
                         {
-                            if (wait.TryConclude(WaitConclusion.TimedOut))
+                            if (wait.TryConclude(Wait.Conclusion.TimedOut))
                                 TryRemoveWait(wait);
                         }
 
@@ -137,19 +136,12 @@ namespace Worms
         async Task WaitTimeout(Wait wait, TimeSpan timeout, CancellationToken cancellationToken)
         {
             await Task.Delay(timeout, cancellationToken).ConfigureAwait(false);
-            if (wait.TryConclude(WaitConclusion.TimedOut))
+            if (wait.TryConclude(Wait.Conclusion.TimedOut))
                 TryRemoveWait(wait);
         }
 
         void TryRemoveWait(Wait wait) =>
-            _state.Update(state =>
-            {
-                var index = Array.IndexOf(state.Waits, wait);
-                if (index < 0)
-                    return null;
-                var waits = state.Waits.Splice(index, 1, (ws, _) => ws);
-                return state.WithWaits(waits);
-            });
+            _state.Update(state => state.WithWaits(state.Waits.TryRemove(wait)));
 
         public void Signal() => Signal(1);
 
@@ -172,7 +164,7 @@ namespace Worms
             });
 
             foreach (var wait in waits)
-                wait.TryConclude(WaitConclusion.Signaled);
+                wait.TryConclude(Wait.Conclusion.Signaled);
         }
 
         public int Block() => Withdraw(int.MaxValue);
@@ -186,58 +178,5 @@ namespace Worms
             });
 
         void IDisposable.Dispose() { /* NOP */ }
-
-        enum WaitConclusion { Signaled, TimedOut }
-
-        sealed class Wait
-        {
-            readonly TaskCompletionSource<bool> _taskCompletionSource;
-            CancellationTokenSource _timeoutCancellation;
-            IDisposable _cancellationRegistration;
-
-            public Wait(TaskCompletionSource<bool> taskCompletionSource, bool canTimeout)
-            {
-                _taskCompletionSource = taskCompletionSource;
-                _timeoutCancellation = canTimeout ? new CancellationTokenSource() : null;
-            }
-
-            public IDisposable CancellationRegistration
-            {
-                set
-                {
-                    if (_cancellationRegistration != null)
-                        throw new InvalidOperationException();
-                    _cancellationRegistration = value;
-                }
-            }
-
-            public CancellationToken TimeoutCancellationToken =>
-                _timeoutCancellation?.Token ?? CancellationToken.None;
-
-            public bool TryConclude(WaitConclusion conclusion)
-            {
-                Debug.Assert(Enum.IsDefined(typeof(WaitConclusion), conclusion));
-                if (!_taskCompletionSource.TrySetResult(conclusion == WaitConclusion.Signaled))
-                    return false;
-                OnConcluded();
-                return true;
-            }
-
-            public bool TryCancel()
-            {
-                if (!_taskCompletionSource.TrySetCanceled())
-                    return false;
-                OnConcluded();
-                return true;
-            }
-
-            void OnConcluded()
-            {
-                Cleaner.Clear(ref _cancellationRegistration)?.Dispose();
-                var timeoutCancellation = Cleaner.Clear(ref _timeoutCancellation);
-                timeoutCancellation?.Cancel();
-                timeoutCancellation?.Dispose();
-            }
-        }
     }
 }

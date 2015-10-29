@@ -40,6 +40,7 @@
   <ItemGroup>
     <Compile Include="App_Packages\AngryArrays\AngryArrays.cs" />
     <Compile Include="App_Packages\Interlocker\Interlocked.cs" />
+    <Compile Include="ArrayExtensions.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="AssemblyInfo.g.cs">
       <AutoGen>True</AutoGen>
@@ -51,6 +52,7 @@
     <Compile Include="FaultedTask.cs" />
     <Compile Include="Mannex.cs" />
     <Compile Include="Semaphore.cs" />
+    <Compile Include="Wait.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
