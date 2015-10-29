@@ -20,10 +20,12 @@ namespace Worms
 
     using System;
     using System.Diagnostics;
+    using System.Threading;
     using System.Threading.Tasks;
     using AngryArrays.Push;
     using AngryArrays.Shift;
     using Interlocker;
+    using Interlocked = Interlocker.Interlocked;
 
     #endregion
 
@@ -33,15 +35,15 @@ namespace Worms
         sealed class State
         {
             public readonly bool IsSet;
-            public readonly TaskCompletionSource<bool>[] Waits;
+            public readonly Wait[] Waits;
 
-            public State(bool isSet, TaskCompletionSource<bool>[] waits)
+            public State(bool isSet, Wait[] waits)
             {
                 IsSet = isSet;
                 Waits = waits;
             }
 
-            public State WithWaits(TaskCompletionSource<bool>[] waits) => new State(IsSet, waits);
+            public State WithWaits(Wait[] waits) => new State(IsSet, waits);
             public State WithSignaled(bool signaled) => new State(signaled, Waits);
             public Tuple<State, T> With<T>(T value) => Tuple.Create(this, value);
         }
@@ -51,27 +53,46 @@ namespace Worms
         public int WaitCount => _state.Value.Waits.Length;
         public bool IsSet => _state.Value.IsSet;
 
-        static readonly TaskCompletionSource<bool>[] ZeroWaits = new TaskCompletionSource<bool>[0];
+        static readonly Wait[] ZeroWaits = new Wait[0];
         readonly static Task CompletedTask = Task.FromResult(true);
 
-        public Task WaitAsync()
+        public Task WaitAsync() => WaitAsync(CancellationToken.None);
+
+        public Task WaitAsync(CancellationToken cancellationToken)
         {
-            return _state.Update(s =>
+            var wait = _state.Update(s =>
             {
-                TaskCompletionSource<bool> tcs;
+                Wait w;
                 return !s.IsSet
-                        ? s.WithWaits(s.Waits.Push(tcs = new TaskCompletionSource<bool>())).With((Task) tcs.Task)
-                        : s.WithSignaled(false).With(CompletedTask);
+                     ? s.WithWaits(s.Waits.Push(w = new Wait(new TaskCompletionSource<bool>(), false))).With(w)
+                     : s.WithSignaled(false).With((Wait) null);
             });
+
+            if (wait == null)
+                return CompletedTask;
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                wait.CancellationRegistration = cancellationToken.Register(() =>
+                {
+                    if (wait.TryCancel())
+                        TryRemoveWait(wait);
+                });
+            }
+
+            return wait.Task;
         }
+
+        void TryRemoveWait(Wait wait) =>
+            _state.Update(state => state.WithWaits(state.Waits.TryRemove(wait)));
 
         public void Set()
         {
             var wait =
                 _state.Update(s => s.Waits.Length > 0
                                  ? s.Waits.Shift((w, waits) => s.WithWaits(waits).With(w))
-                                 : s.WithSignaled(true).With((TaskCompletionSource<bool>) null));
-            wait?.SetResult(true);
+                                 : s.WithSignaled(true).With((Wait) null));
+            wait?.TryConclude(Wait.Conclusion.Signaled);
         }
     }
 }
