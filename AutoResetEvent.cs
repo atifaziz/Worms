@@ -20,6 +20,7 @@ namespace Worms
 
     using System;
     using System.Diagnostics;
+    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
     using AngryArrays.Push;
@@ -72,13 +73,7 @@ namespace Worms
                 return CompletedTask;
 
             if (cancellationToken.CanBeCanceled)
-            {
-                wait.CancellationRegistration = cancellationToken.Register(() =>
-                {
-                    if (wait.TryCancel())
-                        TryRemoveWait(wait);
-                });
-            }
+                wait.OnCancellation(cancellationToken, TryRemoveWait);
 
             return wait.Task;
         }

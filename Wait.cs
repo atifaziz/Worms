@@ -39,17 +39,22 @@ namespace Worms
             _timeoutCancellation = canTimeout ? new CancellationTokenSource() : null;
         }
 
-        public Task Task => _taskCompletionSource.Task;
-
-        public IDisposable CancellationRegistration
+        public void OnCancellation(CancellationToken cancellationToken, Action<Wait> action)
         {
-            set
+            if (_cancellationRegistration != null)
+                throw new InvalidOperationException();
+
+            if (!cancellationToken.CanBeCanceled)
+                return;
+
+            _cancellationRegistration = cancellationToken.Register(() =>
             {
-                if (_cancellationRegistration != null)
-                    throw new InvalidOperationException();
-                _cancellationRegistration = value;
-            }
+                if (TryCancel())
+                    action(this);
+            });
         }
+
+        public Task Task => _taskCompletionSource.Task;
 
         public CancellationToken TimeoutCancellationToken =>
             _timeoutCancellation?.Token ?? CancellationToken.None;
@@ -63,7 +68,7 @@ namespace Worms
             return true;
         }
 
-        public bool TryCancel()
+        bool TryCancel()
         {
             if (!_taskCompletionSource.TrySetCanceled())
                 return false;

@@ -120,13 +120,7 @@ namespace Worms
                     }
 
                     if (cancellationToken.CanBeCanceled)
-                    {
-                        wait.CancellationRegistration = cancellationToken.Register(() =>
-                        {
-                            if (wait.TryCancel())
-                                TryRemoveWait(wait);
-                        });
-                    }
+                        wait.OnCancellation(cancellationToken, TryRemoveWait);
                 }
             }
 
