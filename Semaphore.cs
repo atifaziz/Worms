@@ -24,6 +24,7 @@ namespace Worms
     using System.Threading;
     using System.Threading.Tasks;
     using AngryArrays;
+    using AngryArrays.Push;
     using Interlocker;
     using Mannex;
     using Interlocked = Interlocker.Interlocked;
@@ -49,9 +50,12 @@ namespace Worms
                 new State(Count + by, waits ?? Waits);
             public State DecrementCount(int by = 1) => Adjust(-by);
             public State WithWaits(Wait[] waits) => Adjust(0, waits);
+            public Tuple<State, T> With<T>(T value) => Tuple.Create(this, value);
         }
 
         readonly Interlocked<State> _state;
+
+        readonly static Task<bool> CompletedTask = Task.FromResult(true);
 
         public Semaphore() : this(0) {}
 
@@ -78,45 +82,37 @@ namespace Worms
             if (timeout.Ticks < 0 && isTimeoutFinitie)
                 throw new ArgumentOutOfRangeException(nameof(timeout), timeout, null);
 
-            var result = _state.Update(state =>
+            var wait = _state.Update(state =>
             {
-                if (state.Count > 0)
-                {
-                    return Tuple.Create(state.DecrementCount(), (Wait)null);
-                }   // ReSharper disable once RedundantIfElseBlock
-                else
-                {
-                    var tcs = new TaskCompletionSource<bool>();
-                    var wait = new Wait(tcs, isTimeoutFinitie && timeout != TimeSpan.Zero);
-                    return Tuple.Create(state.WithWaits(state.Waits.Concat(new[] { wait }).ToArray()), wait);
-                }
+                Wait w;
+                return state.Count > 0
+                     ? state.DecrementCount().With((Wait)null)
+                     : state.WithWaits(state.Waits.Push(w = new Wait(new TaskCompletionSource<bool>(), isTimeoutFinitie && timeout != TimeSpan.Zero)))
+                            .With(w);
             });
 
+            if (wait == null)
+                return CompletedTask;
+
+            if (isTimeoutFinitie)
             {
-                var wait = result;
-                if (wait == null)
-                    return Task.FromResult(true);
-
-                if (isTimeoutFinitie)
+                if (timeout == TimeSpan.Zero)
                 {
-                    if (timeout == TimeSpan.Zero)
-                    {
-                        if (wait.TryConclude(Wait.Conclusion.TimedOut))
-                            TryRemoveWait(wait);
-                    }
-
-                    WaitTimeout(wait, timeout,
-                                cancellationToken.CanBeCanceled
-                                ? CancellationTokenSource.CreateLinkedTokenSource(wait.TimeoutCancellationToken, cancellationToken).Token
-                                : wait.TimeoutCancellationToken)
-                        .IgnoreFault();
+                    if (wait.TryConclude(Wait.Conclusion.TimedOut))
+                        TryRemoveWait(wait);
                 }
 
-                if (cancellationToken.CanBeCanceled)
-                    wait.OnCancellation(cancellationToken, TryRemoveWait);
-
-                return result.Task;
+                WaitTimeout(wait, timeout,
+                            cancellationToken.CanBeCanceled
+                            ? CancellationTokenSource.CreateLinkedTokenSource(wait.TimeoutCancellationToken, cancellationToken).Token
+                            : wait.TimeoutCancellationToken)
+                    .IgnoreFault();
             }
+
+            if (cancellationToken.CanBeCanceled)
+                wait.OnCancellation(cancellationToken, TryRemoveWait);
+
+            return wait.Task;
         }
 
         async Task WaitTimeout(Wait wait, TimeSpan timeout, CancellationToken cancellationToken)
