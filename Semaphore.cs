@@ -94,32 +94,12 @@ namespace Worms
             if (wait == null)
                 return CompletedTask;
 
-            if (isTimeoutFinitie)
-            {
-                if (timeout == TimeSpan.Zero)
-                {
-                    if (wait.TryConclude(Wait.Conclusion.TimedOut))
-                        TryRemoveWait(wait);
-                }
-
-                WaitTimeout(wait, timeout,
-                            cancellationToken.CanBeCanceled
-                            ? CancellationTokenSource.CreateLinkedTokenSource(wait.TimeoutCancellationToken, cancellationToken).Token
-                            : wait.TimeoutCancellationToken)
-                    .IgnoreFault();
-            }
+            wait.TimeoutAfter(timeout, TryRemoveWait);
 
             if (cancellationToken.CanBeCanceled)
                 wait.OnCancellation(cancellationToken, TryRemoveWait);
 
             return wait.Task;
-        }
-
-        async Task WaitTimeout(Wait wait, TimeSpan timeout, CancellationToken cancellationToken)
-        {
-            await Task.Delay(timeout, cancellationToken).ConfigureAwait(false);
-            if (wait.TryConclude(Wait.Conclusion.TimedOut))
-                TryRemoveWait(wait);
         }
 
         void TryRemoveWait(Wait wait) =>
