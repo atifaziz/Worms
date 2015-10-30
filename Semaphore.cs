@@ -87,7 +87,7 @@ namespace Worms
                 Wait w;
                 return state.Count > 0
                      ? state.DecrementCount().With((Wait)null)
-                     : state.WithWaits(state.Waits.Push(w = new Wait(new TaskCompletionSource<bool>(), isTimeoutFinitie && timeout != TimeSpan.Zero)))
+                     : state.WithWaits(state.Waits.Push(w = new Wait(isTimeoutFinitie && timeout != TimeSpan.Zero)))
                             .With(w);
             });
 

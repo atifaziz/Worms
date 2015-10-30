@@ -33,9 +33,9 @@ namespace Worms
         CancellationTokenSource _timeoutCancellation;
         IDisposable _cancellationRegistration;
 
-        public Wait(TaskCompletionSource<bool> taskCompletionSource, bool canTimeout)
+        public Wait(bool canTimeout)
         {
-            _taskCompletionSource = taskCompletionSource;
+            _taskCompletionSource = new TaskCompletionSource<bool>();
             _timeoutCancellation = canTimeout ? new CancellationTokenSource() : null;
         }
 

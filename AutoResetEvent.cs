@@ -65,7 +65,7 @@ namespace Worms
             {
                 Wait w;
                 return !s.IsSet
-                     ? s.WithWaits(s.Waits.Push(w = new Wait(new TaskCompletionSource<bool>(), false))).With(w)
+                     ? s.WithWaits(s.Waits.Push(w = new Wait(false))).With(w)
                      : s.WithSignaled(false).With((Wait) null);
             });
 
