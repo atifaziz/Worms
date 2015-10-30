@@ -41,7 +41,11 @@ namespace Worms
 
         bool HasConcluded => _taskCompletionSource.Task.IsCompleted;
 
-        public void TimeoutAfter(TimeSpan delay, Action<Wait> action)
+        public void TimeoutAfter(TimeSpan delay, Action<Wait> action) =>
+            TimeoutAfter(delay, action, false);
+
+        public void TimeoutAfter(TimeSpan delay, Action<Wait> action,
+                                 bool useSynchronizationContext)
         {
             if (_timeoutCancellationSource == null) throw new InvalidOperationException();
 
@@ -54,7 +58,7 @@ namespace Worms
                 return;
             }
 
-            _timeoutCancellationSource.Token.Register(() => OnTimeout(action));
+            _timeoutCancellationSource.Token.Register(() => OnTimeout(action), useSynchronizationContext);
             _timeoutCancellationSource.CancelAfter(delay);
         }
 
@@ -64,7 +68,12 @@ namespace Worms
                 action(this);
         }
 
-        public void OnCancellation(CancellationToken cancellationToken, Action<Wait> action)
+        public void OnCancellation(CancellationToken cancellationToken, Action<Wait> action) =>
+            OnCancellation(cancellationToken, action, false);
+
+        public void OnCancellation(CancellationToken cancellationToken,
+                                   Action<Wait> action,
+                                   bool useSynchronizationContext)
         {
             if (_cancellationRegistration != null)
                 throw new InvalidOperationException();
@@ -84,7 +93,7 @@ namespace Worms
             {
                 if (TryCancel())
                     action(this);
-            }); // TODO useSynchronizationContext: false
+            }, useSynchronizationContext);
         }
 
         public Task<bool> Task => _taskCompletionSource.Task;
