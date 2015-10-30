@@ -141,8 +141,7 @@ namespace Worms
                     Completed  = head,
                     Incomplete = tail,
                 });
-                return Tuple.Create(state.Adjust(leftover, parts.Incomplete),
-                                    parts.Completed);
+                return state.Adjust(leftover, parts.Incomplete).With(parts.Completed);
             });
 
             foreach (var wait in waits)
@@ -155,8 +154,7 @@ namespace Worms
             _state.Update(state =>
             {
                 var adjusted = Math.Min(count, state.Count);
-                return Tuple.Create(state = state.DecrementCount(adjusted),
-                                    state.Count);
+                return (state = state.DecrementCount(adjusted)).With(state.Count);
             });
 
         void IDisposable.Dispose() { /* NOP */ }
