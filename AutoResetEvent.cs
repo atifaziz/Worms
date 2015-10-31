@@ -59,18 +59,29 @@ namespace Worms
 
         public Task WaitAsync() => WaitAsync(CancellationToken.None);
 
-        public Task WaitAsync(CancellationToken cancellationToken)
+        public Task WaitAsync(CancellationToken cancellationToken) =>
+            WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken);
+
+        public Task WaitAsync(TimeSpan timeout) => WaitAsync(timeout, CancellationToken.None);
+
+        public Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
+            var isTimeoutFinitie = timeout != Timeout.InfiniteTimeSpan;
+            if (timeout.Ticks < 0 && isTimeoutFinitie)
+                throw new ArgumentOutOfRangeException(nameof(timeout), timeout, null);
+
             var wait = _state.Update(s =>
             {
                 Wait w;
                 return !s.IsSet
-                     ? s.WithWaits(s.Waits.Push(w = new Wait(false))).With(w)
+                     ? s.WithWaits(s.Waits.Push(w = new Wait(isTimeoutFinitie && timeout != TimeSpan.Zero))).With(w)
                      : s.WithSignaled(false).With((Wait) null);
             });
 
             if (wait == null)
                 return CompletedTask;
+
+            wait.TimeoutAfter(timeout, TryRemoveWait);
 
             if (cancellationToken.CanBeCanceled)
                 wait.OnCancellation(cancellationToken, TryRemoveWait);
