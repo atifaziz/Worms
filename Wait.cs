@@ -27,39 +27,47 @@ namespace Worms
     sealed class Wait
     {
         readonly TaskCompletionSource<bool> _taskCompletionSource;
+        readonly TimeSpan? _timeout;
         CancellationTokenSource _timeoutCancellationSource;
         IDisposable _cancellationRegistration;
 
-        public Wait(bool canTimeout)
+        public Wait() : this(null) {}
+        public Wait(TimeSpan timeout) :
+            this(timeout != Timeout.InfiniteTimeSpan ? timeout : (TimeSpan?) null) { }
+
+        public Wait(TimeSpan? timeout)
         {
-            _taskCompletionSource = new TaskCompletionSource<bool>();
-            _timeoutCancellationSource = canTimeout ? new CancellationTokenSource() : null;
+            if (timeout?.Ticks < 0) throw new ArgumentOutOfRangeException(nameof(timeout));
+
+            _taskCompletionSource      = new TaskCompletionSource<bool>();
+            _timeout                   = timeout;
+            _timeoutCancellationSource = timeout?.Ticks >= 0
+                                       ? new CancellationTokenSource()
+                                       : null;
         }
 
         bool HasConcluded => _taskCompletionSource.Task.IsCompleted;
 
-        public void TimeoutAfter(TimeSpan delay, Action<Wait> action) =>
-            TimeoutAfter(delay, action, false);
+        public void OnTimeout(Action<Wait> action) =>
+            OnTimeout(action, false);
 
-        public void TimeoutAfter(TimeSpan delay, Action<Wait> action,
-                                 bool useSynchronizationContext)
+        public void OnTimeout(Action<Wait> action, bool useSynchronizationContext)
         {
-            if (_timeoutCancellationSource == null) throw new InvalidOperationException();
-
-            if (delay == Timeout.InfiniteTimeSpan || HasConcluded)
+            if (_timeout == null || HasConcluded)
                 return;
 
-            if (delay == TimeSpan.Zero)
+            var timeout = _timeout.Value;
+            if (timeout == TimeSpan.Zero)
             {
-                OnTimeout(action);
+                OnTimeoutCore(action);
                 return;
             }
 
-            _timeoutCancellationSource.Token.Register(() => OnTimeout(action), useSynchronizationContext);
-            _timeoutCancellationSource.CancelAfter(delay);
+            _timeoutCancellationSource.Token.Register(() => OnTimeoutCore(action), useSynchronizationContext);
+            _timeoutCancellationSource.CancelAfter(timeout);
         }
 
-        void OnTimeout(Action<Wait> action)
+        void OnTimeoutCore(Action<Wait> action)
         {
             if (TryConcludeAsSignaled(false))
                 action(this);
