@@ -136,5 +136,12 @@ namespace Worms
             Cleaner.Clear(ref _timeoutCancellationSource)?.Dispose();
             Cleaner.Clear(ref _cancellationRegistration)?.Dispose();
         }
-    }
+
+        public static void ValidTimeoutArgument(TimeSpan timeout, string paramName = null)
+        {
+            if (timeout == Timeout.InfiniteTimeSpan || timeout.Ticks >= 0)
+                return;
+            throw new ArgumentOutOfRangeException(paramName ?? nameof(timeout));
+        }
+   }
 }

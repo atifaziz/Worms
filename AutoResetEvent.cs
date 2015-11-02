@@ -65,6 +65,8 @@ namespace Worms
 
         public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
+            Wait.ValidTimeoutArgument(timeout);
+
             var wait = _state.Update(s =>
             {
                 Wait w;
