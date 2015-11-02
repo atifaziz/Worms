@@ -59,15 +59,15 @@ namespace Worms
             var timeout = _timeout.Value;
             if (timeout == TimeSpan.Zero)
             {
-                OnTimeoutCore(action);
+                OnTimedOut(action);
                 return;
             }
 
-            _timeoutCancellationSource.Token.Register(() => OnTimeoutCore(action), useSynchronizationContext);
+            _timeoutCancellationSource.Token.Register(() => OnTimedOut(action), useSynchronizationContext);
             _timeoutCancellationSource.CancelAfter(timeout);
         }
 
-        void OnTimeoutCore(Action<Wait> action)
+        void OnTimedOut(Action<Wait> action)
         {
             if (TryConcludeAsSignaled(false))
                 action(this);
