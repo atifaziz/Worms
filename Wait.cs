@@ -137,7 +137,7 @@ namespace Worms
             Cleaner.Clear(ref _cancellationRegistration)?.Dispose();
         }
 
-        public static void ValidTimeoutArgument(TimeSpan timeout, string paramName = null)
+        public static void ValidateTimeoutArgument(TimeSpan timeout, string paramName = null)
         {
             if (timeout == Timeout.InfiniteTimeSpan || timeout.Ticks >= 0)
                 return;
