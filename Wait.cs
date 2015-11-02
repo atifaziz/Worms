@@ -37,7 +37,7 @@ namespace Worms
         public Wait(TimeSpan timeout) :
             this(timeout != Timeout.InfiniteTimeSpan ? timeout : (TimeSpan?) null) { }
 
-        public Wait(TimeSpan? timeout)
+        Wait(TimeSpan? timeout)
         {
             if (timeout?.Ticks < 0) throw new ArgumentOutOfRangeException(nameof(timeout));
 
