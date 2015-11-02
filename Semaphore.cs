@@ -31,7 +31,7 @@ namespace Worms
     #endregion
 
     [DebuggerDisplay("Count = {FreeCount}, WaitCount = {WaitCount}")]
-    public class Semaphore : IDisposable
+    public class Semaphore
     {
         sealed class State
         {
@@ -131,7 +131,5 @@ namespace Worms
                 var adjusted = Math.Min(count, state.Count);
                 return (state = state.DecrementCount(adjusted)).With(state.Count);
             });
-
-        void IDisposable.Dispose() { /* NOP */ }
     }
 }
