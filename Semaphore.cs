@@ -54,8 +54,6 @@ namespace Worms
 
         readonly Interlocked<State> _state;
 
-        readonly static Task<bool> CompletedTask = Task.FromResult(true);
-
         public Semaphore() : this(0) {}
 
         public Semaphore(int initialCount)
@@ -87,7 +85,7 @@ namespace Worms
             });
 
             if (wait == null)
-                return CompletedTask;
+                return Wait.SucceededTask;
 
             if (cancellationToken.CanBeCanceled)
                 wait.OnCancellation(cancellationToken, TryRemoveWait);

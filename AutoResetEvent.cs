@@ -55,7 +55,6 @@ namespace Worms
         public bool IsSet => _state.Value.IsSet;
 
         static readonly Wait[] ZeroWaits = new Wait[0];
-        readonly static Task<bool> CompletedTask = Task.FromResult(true);
 
         public Task<bool> WaitAsync() => WaitAsync(CancellationToken.None);
 
@@ -75,7 +74,7 @@ namespace Worms
             });
 
             if (wait == null)
-                return CompletedTask;
+                return Wait.SucceededTask;
 
             if (cancellationToken.CanBeCanceled)
                 wait.OnCancellation(cancellationToken, TryRemoveWait);

@@ -26,6 +26,8 @@ namespace Worms
 
     sealed class Wait
     {
+        public readonly static Task<bool> SucceededTask = System.Threading.Tasks.Task.FromResult(true);
+
         readonly TaskCompletionSource<bool> _taskCompletionSource;
         readonly TimeSpan? _timeout;
         CancellationTokenSource _timeoutCancellationSource;
