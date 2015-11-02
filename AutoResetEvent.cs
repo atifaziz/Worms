@@ -55,16 +55,16 @@ namespace Worms
         public bool IsSet => _state.Value.IsSet;
 
         static readonly Wait[] ZeroWaits = new Wait[0];
-        readonly static Task CompletedTask = Task.FromResult(true);
+        readonly static Task<bool> CompletedTask = Task.FromResult(true);
 
-        public Task WaitAsync() => WaitAsync(CancellationToken.None);
+        public Task<bool> WaitAsync() => WaitAsync(CancellationToken.None);
 
-        public Task WaitAsync(CancellationToken cancellationToken) =>
+        public Task<bool> WaitAsync(CancellationToken cancellationToken) =>
             WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken);
 
-        public Task WaitAsync(TimeSpan timeout) => WaitAsync(timeout, CancellationToken.None);
+        public Task<bool> WaitAsync(TimeSpan timeout) => WaitAsync(timeout, CancellationToken.None);
 
-        public Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             var wait = _state.Update(s =>
             {
