@@ -125,7 +125,7 @@ namespace Worms
             });
 
             foreach (var wait in waits)
-                wait.TryConclude(Wait.Conclusion.Signaled);
+                wait.TrySignal();
         }
 
         public int Block() => Withdraw(int.MaxValue);

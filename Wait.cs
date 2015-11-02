@@ -19,7 +19,6 @@ namespace Worms
     #region Imports
 
     using System;
-    using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -27,8 +26,6 @@ namespace Worms
 
     sealed class Wait
     {
-        public enum Conclusion { Signaled, TimedOut }
-
         readonly TaskCompletionSource<bool> _taskCompletionSource;
         CancellationTokenSource _timeoutCancellationSource;
         IDisposable _cancellationRegistration;
@@ -64,7 +61,7 @@ namespace Worms
 
         void OnTimeout(Action<Wait> action)
         {
-            if (TryConclude(Conclusion.TimedOut))
+            if (TryConcludeAsSignaled(false))
                 action(this);
         }
 
@@ -98,10 +95,11 @@ namespace Worms
 
         public Task<bool> Task => _taskCompletionSource.Task;
 
-        public bool TryConclude(Conclusion conclusion)
+        public bool TrySignal() => TryConcludeAsSignaled(true);
+
+        bool TryConcludeAsSignaled(bool signaled)
         {
-            Debug.Assert(Enum.IsDefined(typeof(Conclusion), conclusion));
-            if (!_taskCompletionSource.TrySetResult(conclusion == Conclusion.Signaled))
+            if (!_taskCompletionSource.TrySetResult(signaled))
                 return false;
             OnConcluded();
             return true;

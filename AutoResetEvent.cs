@@ -98,7 +98,7 @@ namespace Worms
                 _state.Update(s => s.Waits.Length > 0
                                  ? s.Waits.Shift((w, waits) => s.WithWaits(waits).With(w))
                                  : s.WithSignaled(true).With((Wait) null));
-            wait?.TryConclude(Wait.Conclusion.Signaled);
+            wait?.TrySignal();
         }
     }
 }
