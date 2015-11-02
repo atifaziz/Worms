@@ -86,6 +86,12 @@ namespace Worms
             if (!cancellationToken.CanBeCanceled || HasConcluded)
                 return;
 
+            if (cancellationToken.IsCancellationRequested)
+            {
+                OnCanceled(action);
+                return;
+            }
+
             // There is a chance that while setting up the following
             // cancellation registration, the wait will already have concluded.
             // And while conclusion disposes the cancellation registration,
@@ -94,11 +100,13 @@ namespace Worms
             // release). In any event, what's paramount is that no matter how
             // many times the callback will fire, the conclusion won't change.
 
-            _cancellationRegistration = cancellationToken.Register(() =>
-            {
-                if (TryCancel())
-                    action(this);
-            }, useSynchronizationContext);
+            _cancellationRegistration = cancellationToken.Register(() => OnCanceled(action), useSynchronizationContext);
+        }
+
+        void OnCanceled(Action<Wait> action)
+        {
+            if (TryCancel())
+                action(this);
         }
 
         public Task<bool> Task => _taskCompletionSource.Task;
