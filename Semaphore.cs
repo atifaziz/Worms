@@ -90,10 +90,10 @@ namespace Worms
             if (wait == null)
                 return CompletedTask;
 
-            wait.OnTimeout(TryRemoveWait);
-
             if (cancellationToken.CanBeCanceled)
                 wait.OnCancellation(cancellationToken, TryRemoveWait);
+
+            wait.OnTimeout(TryRemoveWait);
 
             return wait.Task;
         }
