@@ -2,7 +2,7 @@
 <package >
     <metadata>
         <id>Worms</id>
-        <version>1.0.0</version>
+        <version>1.0.0$VersionSuffix$</version>
         <title>Worms: Awaitable Synchronization Primitives</title>
         <authors>Atif Aziz</authors>
         <owners>Atif Aziz</owners>
