@@ -28,8 +28,8 @@ public class Semaphore
     public Semaphore(int initialCount);
 
     public Task WaitAsync();
+    public Task WaitAsync(CancellationToken cancellationToken);
     public Task<bool> WaitAsync(TimeSpan timeout);
-    public Task<bool> WaitAsync(CancellationToken cancellationToken);
     public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken);
 
     public void Signal();
@@ -54,8 +54,8 @@ public class AutoResetEvent
 {
     public AutoResetEvent();
 
-    public Task<bool> WaitAsync();
-    public Task<bool> WaitAsync(CancellationToken cancellationToken);
+    public Task WaitAsync();
+    public Task WaitAsync(CancellationToken cancellationToken);
     public Task<bool> WaitAsync(TimeSpan timeout);
     public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken);
 

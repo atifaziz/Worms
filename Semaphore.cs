@@ -68,10 +68,11 @@ namespace Worms
         public Task WaitAsync() =>
             WaitAsync(Timeout.InfiniteTimeSpan, CancellationToken.None);
 
-        public Task<bool> WaitAsync(TimeSpan timeout) => WaitAsync(timeout, CancellationToken.None);
-
-        public Task<bool> WaitAsync(CancellationToken cancellationToken) =>
+        public Task WaitAsync(CancellationToken cancellationToken) =>
             WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken);
+
+        public Task<bool> WaitAsync(TimeSpan timeout) =>
+            WaitAsync(timeout, CancellationToken.None);
 
         public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
