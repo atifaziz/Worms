@@ -1,6 +1,7 @@
 # Worms
 
 ![Build Status](https://img.shields.io/appveyor/ci/raboof/worms.svg)
+![MyGet](https://img.shields.io/myget/raboof/v/Worms.svg?label=myget)
 
 Worms is a .NET PCL (Portable Class Library) that provides awaitable
 synchronization primitives for use with code employing the [`Task`][task]
