@@ -20,6 +20,7 @@ namespace Worms
 
     using System;
     using System.Diagnostics;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AngryArrays;
@@ -120,8 +121,13 @@ namespace Worms
                 return state.Adjust(leftover, parts.Incomplete).With(parts.Completed);
             });
 
-            foreach (var wait in waits)
-                wait.TrySignal();
+            if (waits.Length == 0)
+                return;
+
+            // If any waits fail to signal (e.g. they timed-out or canceled
+            // meanwhile) then release those many back to the semaphore.
+
+            Signal(waits.Sum(wait => wait.TrySignal() ? 0 : 1));
         }
 
         public int Block() => Withdraw(int.MaxValue);
