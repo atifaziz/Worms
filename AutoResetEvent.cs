@@ -91,20 +91,19 @@ namespace Worms
 
         public void Set()
         {
-            while (true)
-            {
-                var wait =
-                    _state.Update(s => s.Waits.Length > 0
-                                     ? s.Waits.Shift((w, waits) => s.WithWaits(waits).With(w))
-                                     : s.WithSignaled(true).With((Wait)null));
+            reset:
 
-                // Signaling a wait can fail if it timed-out or canceled
-                // between the time it was "chosen" and signaled. If that
-                // happens then retry (setting the event once more).
+            var wait =
+                _state.Update(s => s.Waits.Length > 0
+                                 ? s.Waits.Shift((w, waits) => s.WithWaits(waits).With(w))
+                                 : s.WithSignaled(true).With((Wait)null));
 
-                if (wait?.TrySignal() == true)
-                    break;
-            }
+            // Signaling a wait can fail if it timed-out or canceled between
+            // the time it was "chosen" and signaled. If that happens then
+            // retry setting the event.
+
+            if (wait?.TrySignal() == false)
+                goto reset;
         }
     }
 }
