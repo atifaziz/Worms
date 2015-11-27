@@ -1,6 +1,7 @@
 # Worms
 
 [![Build Status][build-badge]][builds]
+[![NuGet][nuget-badge]][nuget-pkg]
 [![MyGet][myget-badge]][edge-pkgs]
 
 Worms is a .NET PCL (Portable Class Library) that provides awaitable
@@ -16,6 +17,8 @@ time-out specification as well as cancellation via a `CancellationToken`.
 from MyGet using the following command-line:
 
     nuget install Worms -Pre -Source https://www.myget.org/F/raboof/api/v2
+
+Otherwise look for [publised releases on NuGet.org][nuget-pkg].
 
 ## Synchronization Primitives
 
@@ -71,4 +74,6 @@ public class AutoResetEvent
   [build-badge]: https://img.shields.io/appveyor/ci/raboof/worms.svg
   [myget-badge]: https://img.shields.io/myget/raboof/v/Worms.svg?label=myget
   [edge-pkgs]: https://www.myget.org/feed/raboof/package/nuget/Worms
+  [nuget-badge]: https://img.shields.io/nuget/v/Worms.svg
+  [nuget-pkg]: https://www.nuget.org/packages/Worms
   [builds]: https://ci.appveyor.com/project/raboof/worms
