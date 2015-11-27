@@ -10,7 +10,7 @@
         <projectUrl>https://github.com/atifaziz/Worms</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>.NET Portable Class Library that provides awaitable synchronization primitives for use with code employing the Task abstraction for modeling asynchronous operations.</description>
-        <copyright>Copyright &#169; 2015 Atif Aziz. All rights reserved. Portions Copyright &#169; Microsoft.</copyright>
+        <copyright>Copyright &#169; 2015 Atif Aziz. All rights reserved.</copyright>
         <tags>TPL threading synchronization await async</tags>
     </metadata>
     <files>
