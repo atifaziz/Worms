@@ -12,6 +12,7 @@
         <description>.NET Portable Class Library that provides awaitable synchronization primitives for use with code employing the Task abstraction for modeling asynchronous operations.</description>
         <copyright>Copyright &#169; 2015 Atif Aziz. All rights reserved.</copyright>
         <tags>TPL threading synchronization await async</tags>
+        <releaseNotes>Commit @ $RepoCommit$</releaseNotes>
     </metadata>
     <files>
         <file src="COPYING.txt" target="COPYING.txt" />
